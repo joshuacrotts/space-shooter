@@ -10,7 +10,8 @@ static void updateFighters(void);
 static void drawPlayer(void);
 static void drawBullets(void);
 static void drawFighters(void);
-static void spawnEnemies();
+static void spawnEnemies(void);
+static bool bulletHitFighter(Entity*);
 
 static int enemySpawnTimer;
 
@@ -44,6 +45,7 @@ static void initPlayer() {
 
   player->x = 100;
   player->y = 100;
+  player->side = SIDE_PLAYER;
   player->texture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/player.png");
 
   SDL_QueryTexture(player->texture, NULL, NULL, &player->w, &player->h);
@@ -99,6 +101,8 @@ static void fireBullet() {
   bullet->dy = randomFloat(-3, 3);
   bullet->health = 1;
   bullet->texture = bulletTexture;
+  bullet->side = SIDE_PLAYER;
+
   SDL_QueryTexture(bullet->texture, NULL, NULL, &bullet->w, &bullet->h);
 
   bullet->y += (player->h / 2) - (bullet->h / 2);
@@ -115,13 +119,13 @@ static void updateBullets() {
     b->x += b->dx;
     b->y += b->dy;
 
-    if (b->x > SCREEN_WIDTH) {
+    if (bulletHitFighter(b) || b->x > SCREEN_WIDTH) {
       if(b == stage.bulletTail) {
         stage.bulletTail = prev;
-        prev->next = b->next;
-        free(b);
-        b = prev;
       }
+      prev->next = b->next;
+      free(b);
+      b = prev;
     }
     prev = b;
   }
@@ -135,7 +139,7 @@ static void updateFighters() {
     e->x += e->dx;
     e->y += e->dy;
 
-    if (e != player && e->x < -e->w) {
+    if (e != player && (e->x < -e->w || e->health == 0)) {
       if (e == stage.fighterTail) {
         stage.fighterTail = prev;
       }
@@ -185,9 +189,25 @@ static void spawnEnemies() {
     enemy->x = SCREEN_WIDTH;
     enemy->y = randomInt(0, SCREEN_HEIGHT);
     enemy->texture = enemyTexture;
+    enemy->side = SIDE_ALIEN;
+    enemy->health = 1;
     SDL_QueryTexture(enemy->texture, NULL, NULL, &enemy->w, &enemy->h);
 
     enemy->dx = randomInt(-4, -2);
     enemySpawnTimer = randomInt(30, 60);
   }
+}
+
+static bool bulletHitFighter(Entity* b) {
+  Entity* e;
+
+  for (e = stage.fighterHead.next; e != NULL; e = e->next) {
+    if(e->side != b->side && collision(b->x, b->y, b->w, b->h, e->x, e->y, e->w, e->h)) {
+      b->health = 0;
+      e->health = 0;
+      return true;
+    }
+  }
+
+  return false;
 }
