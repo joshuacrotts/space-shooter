@@ -5,6 +5,7 @@ typedef struct Entity Entity;
 typedef struct Explosion Explosion;
 typedef struct Debris Debris;
 typedef struct FireTrail FireTrail;
+typedef struct ExplosionParticle ExplosionParticle;
 
 typedef struct Delegate {
   void (*tick)(void);
@@ -48,10 +49,20 @@ typedef struct FireTrail {
   float y;
   float dx;
   float dy;
-  int r, g, b, a;
+  float dim;
   SDL_Rect rect;
-  FireTrail* trail;
 } FireTrail;
+
+typedef struct ExplosionParticle {
+  float x;
+  float y;
+  float dx;
+  float dy;
+  float dim;
+  float grayscaleColor;
+  SDL_Rect rect;
+  ExplosionParticle* next;
+} ExplosionParticle;
 
 typedef struct Debris {
   float x;
@@ -76,4 +87,5 @@ typedef struct Stage {
   Explosion explosionHead, *explosionTail;
   Debris debrisHead, *debrisTail;
   FireTrail fireHead, *fireTail;
+  ExplosionParticle explosionParticleHead, *explosionParticleTail;
 } Stage;

@@ -2,28 +2,42 @@
 
 static void tick(void);
 static void draw(void);
+
+//========= INIT PROTOTYPES ==========//
 static void initPlayer(void);
 static void initStarfield(void);
-static void fireBullet(void);
+static void initFireParticles(void);
+
+//========= UPDATE PROTOTYPES ==========//
 static void updatePlayer(void);
 static void updateBullets(void);
 static void updateFighters(void);
+static void updateFireParticles(void);
+static void updateExplosionParticles(void);
 static void updateEnemies(void);
 static void updateBackground(void);
 static void updateExplosions(void);
 static void updateDebris(void);
 static void updateStarfield(void);
+
+//========= DRAW/RENDER PROTOTYPES ==========/
 static void drawPlayer(void);
 static void drawBullets(void);
 static void drawFighters(void);
 static void drawBackground(void);
 static void drawStarfield(void);
 static void drawExplosions(void);
+static void drawExplosionParticles(void);
+static void drawFireParticles(void);
 static void drawDebris(void);
+
+//========= ETC PROTOTYPES ==========//
 static void spawnEnemies(void);
+static void fireBullet(void);
 static bool bulletHitFighter(Entity*);
 static void fireAlienBullet(Entity*);
 static void addExplosion(int, int, int);
+static void addExplosionParticle(int, int, int);
 static void addDebris(Entity*);
 static void clipPlayer(void);
 static void resetStage(void);
@@ -33,7 +47,9 @@ static int stageResetTimer;
 static int backgroundX;
 
 static Star stars[MAX_STARS];
+static FireTrail fireTrail[MAX_FIRE_PARTICLES];
 static Entity* player;
+
 static SDL_Texture* bulletTexture;
 static SDL_Texture* enemyTexture;
 static SDL_Texture* alienBulletTexture;
@@ -54,6 +70,7 @@ void initStage(void) {
   stage.explosionTail = &stage.explosionHead;
   stage.debrisTail = &stage.debrisHead;
   stage.fireTail = &stage.fireHead;
+  stage.explosionParticleTail = &stage.explosionParticleHead;
 
   playerTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/player.png");
   bulletTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/bullet.png");
@@ -95,12 +112,28 @@ static void initStarfield() {
   }
 }
 
+static void initFireParticles() {
+  for (int i = 0; i < MAX_FIRE_PARTICLES; i++) {
+    fireTrail[i].x = player->x;
+    fireTrail[i].y = player->y + player->h / 2;
+    fireTrail[i].dx = randomFloat(-5, -2);
+    fireTrail[i].dy = randomFloat(-3, 3);
+    fireTrail[i].dim = randomInt(1, 5);
+    fireTrail[i].rect.x = fireTrail[i].x;
+    fireTrail[i].rect.y = fireTrail[i].y;
+    fireTrail[i].rect.w = fireTrail[i].dim;
+    fireTrail[i].rect.h = fireTrail[i].dim;
+  }
+}
+
 /*
  *
  */
 static void tick() {
   updateBackground();
   updateStarfield();
+  updateFireParticles();
+  updateExplosionParticles();
   updatePlayer();
   updateEnemies();
   updateFighters();
@@ -109,6 +142,7 @@ static void tick() {
   updateExplosions();
   updateDebris();
   clipPlayer();
+
   //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%p.\n", player);
   if (player == NULL && --stageResetTimer <= 0) {
     resetStage();
@@ -190,8 +224,7 @@ static void updateEnemies() {
 /*
  *
  */
-static void updateFighters()
-{
+static void updateFighters() {
 	Entity* e;
   Entity* prev;
 
@@ -248,6 +281,31 @@ static void updateStarfield() {
 /*
  *
  */
+static void updateFireParticles() {
+  for (int i = 0; i < MAX_FIRE_PARTICLES; i++) {
+    fireTrail[i].x += fireTrail[i].dx;
+    fireTrail[i].y += fireTrail[i].dy;
+
+    fireTrail[i].rect.x = fireTrail[i].x;
+    fireTrail[i].rect.y = fireTrail[i].y;
+
+    if (fireTrail[i].x < 0) {
+      fireTrail[i].x = player->x;
+      fireTrail[i].y = player->y + player->h / 2;
+      fireTrail[i].dx = randomFloat(-5, -2);
+      fireTrail[i].dy = randomFloat(-3, 3);
+      fireTrail[i].dim = randomInt(1, 5);
+      fireTrail[i].rect.x = fireTrail[i].x;
+      fireTrail[i].rect.y = fireTrail[i].y;
+      fireTrail[i].rect.w = fireTrail[i].dim;
+      fireTrail[i].rect.h = fireTrail[i].dim;
+    }
+  }
+}
+
+/*
+ *
+ */
 static void updateExplosions() {
   Explosion* e;
   Explosion* prev;
@@ -270,6 +328,38 @@ static void updateExplosions() {
   }
 }
 
+/*
+ *
+ */
+static void updateExplosionParticles() {
+  ExplosionParticle* e;
+  ExplosionParticle* prev;
+
+  prev = &stage.explosionParticleHead;
+
+  for(e = stage.explosionParticleHead.next; e != NULL; e = e->next) {
+    e->x += e->dx;
+    e->y += e->dy;
+
+    e->rect.x = e->x;
+    e->rect.y = e->y;
+
+    if (e->x <= 0 || e->y <=0 || e->x >= SCREEN_WIDTH || e->y >= SCREEN_HEIGHT) {
+      if (e == stage.explosionParticleTail) {
+        stage.explosionParticleTail = prev;
+      }
+
+      prev->next = e->next;
+      free(e);
+      e = prev;
+    }
+    prev = e;
+  }
+}
+
+/*
+ *
+ */
 static void updateDebris() {
   Debris* d;
   Debris* prev;
@@ -303,11 +393,15 @@ static void draw() {
 
 	drawStarfield();
 
+  drawFireParticles();
+
 	drawFighters();
 
 	drawDebris();
 
 	drawExplosions();
+
+  drawExplosionParticles();
 
 	drawBullets();
 }
@@ -372,8 +466,22 @@ static void drawStarfield() {
 /*
  *
  */
+static void drawFireParticles() {
+  for (int i = 0; i < MAX_FIRE_PARTICLES; i++) {
+    int r = randomInt(165, 255);
+    int g = randomInt(20, 225);
+    int b = randomInt(18, 70);
+
+    SDL_SetRenderDrawColor(app.renderer, r, g, b, 255);
+    SDL_RenderFillRect(app.renderer, &fireTrail[i].rect);
+  }
+}
+
+/*
+ *
+ */
 static void drawDebris() {
-  Debris *d;
+  Debris* d;
 
   for (d = stage.debrisHead.next; d != NULL; d = d->next) {
     blitRect(d->texture, &d->rect, d->x, d->y);
@@ -397,6 +505,20 @@ static void drawExplosions() {
   }
 
   SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_NONE);
+}
+
+/*
+ *
+ */
+static void drawExplosionParticles() {
+  ExplosionParticle* exp;
+
+  for (exp = stage.explosionParticleHead.next; exp != NULL; exp = exp->next) {
+    int c = exp->grayscaleColor;
+    SDL_SetRenderDrawColor(app.renderer, c, c, c, 255);
+    SDL_RenderFillRect(app.renderer, &exp->rect);
+    //blitRect(d->texture, &d->rect, d->x, d->y);
+  }
 }
 
 /*
@@ -435,7 +557,7 @@ static bool bulletHitFighter(Entity* b) {
       b->health = 0;
       e->health = 0;
       addExplosion(e->x, e->y, 32);
-
+      addExplosionParticle(e->x, e->y, 32);
       addDebris(e);
       return true;
     }
@@ -580,23 +702,29 @@ static void addDebris(Entity* e) {
 /*
  *
  */
-static void addFireParticle(Entity* p) {
-  FireTrail* trail;
+static void addExplosionParticle(int x, int y, int num) {
+  ExplosionParticle* exp;
 
-  trail = malloc(sizeof(FireTrail));
-  stage.fireTail.next = trail;
-  stage.fireTail = tail;
+  for (int i = 0; i < num; i++) {
+    exp = malloc(sizeof(ExplosionParticle));
+    memset(exp, 0, sizeof(ExplosionParticle));
 
-  trail->x = p->x - p->w / 2;
-  trail->y = p->y + p->y / 2;
-  trail->dx = randomFloat(-7, -2);
-  trail->dy = randomFloat(-3, 3);
-  trail->life = FRAMES_PER_SECOND * 6;
+    stage.explosionParticleTail->next = exp;
+    stage.explosionParticleTail = exp;
 
-  trail->rect.x = x;
-  trail->rect.y = y;
-  trail->rect.w = randomInt(1, 6);
-  trail->rect.h = trail->rect.w;
+    exp->x = x;
+    exp->y = y;
+    exp->dim = randomInt(1, 5);
+    exp->dx = randomFloat(-5, 5);
+    exp->dy = randomFloat(-5, 5);
+
+    exp->grayscaleColor = randomInt(0, 255);
+
+    exp->rect.x = exp->x;
+    exp->rect.y = exp->y;
+    exp->rect.w = exp->dim;
+    exp->rect.h = exp->dim;
+  }
 }
 
 /*
@@ -606,6 +734,13 @@ static void resetStage(void) {
   Entity* e;
   Explosion* ex;
   Debris* d;
+  ExplosionParticle* exp;
+
+  while(stage.explosionParticleHead.next) {
+    exp = stage.explosionParticleHead.next;
+    stage.explosionParticleHead.next = exp->next;
+    free(exp);
+  }
 
   while (stage.explosionHead.next) {
     ex = stage.explosionHead.next;
@@ -636,9 +771,11 @@ static void resetStage(void) {
   stage.bulletTail = &stage.bulletHead;
   stage.explosionTail = &stage.explosionHead;
   stage.debrisTail = &stage.debrisHead;
+  stage.explosionParticleTail = &stage.explosionParticleHead;
 
   initPlayer();
   initStarfield();
+  initFireParticles();
 
   enemySpawnTimer = 0;
 
