@@ -17,3 +17,4 @@ int randomInt(int, int);
 float randomFloat(float, float);
 int clamp(int, int, int);
 int collision(int, int, int, int, int, int, int, int);
+void calcSlope(int, int, int, int, float*, float*);

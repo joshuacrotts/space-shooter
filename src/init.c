@@ -40,6 +40,9 @@ void initSDL(void) {
 
     //  Initialize SDL to accept both JPG and PNGs.
     IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+    //  Remove cursor.
+    SDL_ShowCursor(false);
   }
 }
 
