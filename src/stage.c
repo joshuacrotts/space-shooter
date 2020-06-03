@@ -143,7 +143,6 @@ static void tick() {
   updateDebris();
   clipPlayer();
 
-  //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%p.\n", player);
   if (player == NULL && --stageResetTimer <= 0) {
     resetStage();
   }
@@ -240,6 +239,7 @@ static void updateFighters() {
 
 		if (e->health == 0) {
 			if (e == player) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Player has died.\n");
 				player = NULL;
 			}
 
@@ -289,9 +289,9 @@ static void updateFireParticles() {
     fireTrail[i].rect.x = fireTrail[i].x;
     fireTrail[i].rect.y = fireTrail[i].y;
 
-    if (fireTrail[i].x < 0) {
+    if (fireTrail[i].x < 0 && player != NULL) {
       fireTrail[i].x = player->x;
-      fireTrail[i].y = player->y + player->h / 2;
+      fireTrail[i].y = player->y + (player->h >> 1);
       fireTrail[i].dx = randomFloat(-5, -2);
       fireTrail[i].dy = randomFloat(-3, 3);
       fireTrail[i].dim = randomInt(1, 5);
@@ -390,20 +390,13 @@ static void updateDebris() {
  */
 static void draw() {
   drawBackground();
-
-	drawStarfield();
-
+  drawStarfield();
   drawFireParticles();
-
-	drawFighters();
-
-	drawDebris();
-
-	drawExplosions();
-
+  drawFighters();
+  drawDebris();
+  drawExplosions();
   drawExplosionParticles();
-
-	drawBullets();
+  drawBullets();
 }
 
 /*
@@ -736,36 +729,42 @@ static void resetStage(void) {
   Debris* d;
   ExplosionParticle* exp;
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Reset started.\n");
   while(stage.explosionParticleHead.next) {
     exp = stage.explosionParticleHead.next;
     stage.explosionParticleHead.next = exp->next;
     free(exp);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleared explosion particle handler.\n");
   while (stage.explosionHead.next) {
     ex = stage.explosionHead.next;
     stage.explosionHead.next = ex->next;
     free(ex);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleared debris handler.\n");
   while (stage.debrisHead.next) {
     d = stage.debrisHead.next;
     stage.debrisHead.next = ex->next;
     free(d);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleared fighter handler.\n");
   while (stage.fighterHead.next) {
     e = stage.fighterHead.next;
     stage.fighterHead.next = e->next;
     free(e);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleared bullet handler.\n");
   while (stage.bulletHead.next) {
     e = stage.bulletHead.next;
     stage.bulletHead.next = e->next;
     free(e);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Resetting pointers.\n");
   memset(&stage, 0, sizeof(Stage));
   stage.fighterTail = &stage.fighterHead;
   stage.bulletTail = &stage.bulletHead;
@@ -776,7 +775,7 @@ static void resetStage(void) {
   initPlayer();
   initStarfield();
   initFireParticles();
-
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Reinitialization complete.\n");
   enemySpawnTimer = 0;
 
   stageResetTimer = FRAMES_PER_SECOND * 3;
