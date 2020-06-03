@@ -6,11 +6,18 @@ static void initPlayer(void);
 static void fireBullet(void);
 static void updatePlayer(void);
 static void updateBullets(void);
+static void updateFighters(void);
 static void drawPlayer(void);
 static void drawBullets(void);
+static void drawFighters(void);
+static void spawnEnemies();
+
+static int enemySpawnTimer;
 
 static Entity* player;
 static SDL_Texture* bulletTexture;
+static SDL_Texture* enemyTexture;
+static SDL_Texture* alienBulletTexture;
 
 void initStage(void) {
   app.delegate.tick = tick;
@@ -23,6 +30,9 @@ void initStage(void) {
   initPlayer();
 
   bulletTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/bullet.png");
+  enemyTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/enemy.png");
+
+  enemySpawnTimer = 0;
 }
 
 static void initPlayer() {
@@ -41,7 +51,9 @@ static void initPlayer() {
 
 static void tick() {
   updatePlayer();
+  updateFighters();
   updateBullets();
+  spawnEnemies();
 }
 
 static void updatePlayer() {
@@ -115,9 +127,30 @@ static void updateBullets() {
   }
 }
 
+static void updateFighters() {
+  Entity* e;
+  Entity* prev;
+
+  for (e = stage.fighterHead.next; e != NULL; e = e->next) {
+    e->x += e->dx;
+    e->y += e->dy;
+
+    if (e != player && e->x < -e->w) {
+      if (e == stage.fighterTail) {
+        stage.fighterTail = prev;
+      }
+      prev->next = e->next;
+      free(e);
+      e = prev;
+    }
+    prev = e;
+  }
+}
+
 static void draw() {
   drawPlayer();
   drawBullets();
+  drawFighters();
 }
 
 static void drawPlayer() {
@@ -129,5 +162,32 @@ static void drawBullets() {
 
   for (b = stage.bulletHead.next; b != NULL; b = b->next) {
     blit(b->texture, b->x, b->y);
+  }
+}
+
+static void drawFighters() {
+  Entity* e;
+
+  for (e = stage.fighterHead.next; e != NULL; e = e->next) {
+    blit(e->texture, e->x, e->y);
+  }
+}
+
+static void spawnEnemies() {
+  Entity* enemy;
+
+  if (--enemySpawnTimer <= 0) {
+    enemy = malloc(sizeof(Entity));
+    memset(enemy, 0, sizeof(Entity));
+    stage.fighterTail->next = enemy;
+    stage.fighterTail = enemy;
+
+    enemy->x = SCREEN_WIDTH;
+    enemy->y = randomInt(0, SCREEN_HEIGHT);
+    enemy->texture = enemyTexture;
+    SDL_QueryTexture(enemy->texture, NULL, NULL, &enemy->w, &enemy->h);
+
+    enemy->dx = randomInt(-4, -2);
+    enemySpawnTimer = randomInt(30, 60);
   }
 }
