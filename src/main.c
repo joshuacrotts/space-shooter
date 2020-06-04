@@ -5,11 +5,12 @@ static void capFrameRate(long*, float*);
 int main(int argc, char *argv[]) {
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Setup started.\n");
   memset(&app, 0, sizeof(App));
-  
+
   long then;
   float remainder;
 
   initSDL();
+  initSounds();
 
   // Assigns the callback function to clean up the
   // SDL context when closing the program.

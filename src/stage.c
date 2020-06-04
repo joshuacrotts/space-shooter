@@ -180,6 +180,7 @@ static void updatePlayer() {
     }
     if (app.keyboard[SDL_SCANCODE_LCTRL] && player->reload == 0) {
       fireBullet();
+      playSound(SND_PLAYER_FIRE, CH_PLAYER);
     }
 
     player->x += player->dx;
@@ -222,6 +223,7 @@ static void updateEnemies() {
 		if (e != player && player != NULL && --e->reload <= 0)
 		{
 			fireAlienBullet(e);
+      playSound(SND_ALIEN_FIRE, CH_ALIEN_FIRE);
 		}
 	}
 }
@@ -562,8 +564,18 @@ static bool bulletHitFighter(Entity* b) {
       addExplosion(e->x, e->y, 32);
       addExplosionParticle(e->x, e->y, 32);
       addDebris(e);
+
+      if (e == player) {
+        playSound(SND_PLAYER_DIE, CH_PLAYER);
+      } else {
+        // We choose this channel so we can play multiple overlapping
+        // sound effects.
+        playSound(SND_ALIEN_DIE, CH_ANY);
+      }
+
       return true;
     }
+
   }
 
   return false;

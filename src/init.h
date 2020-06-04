@@ -4,4 +4,5 @@
 extern App app;
 
 extern void initSDL(void);
+extern void initAudioContext(void);
 extern void cleanup(void);

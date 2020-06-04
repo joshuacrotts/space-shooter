@@ -25,25 +25,39 @@ void initSDL(void) {
   if (!app.window) {
     SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not open window. %s.\n", SDL_GetError());
     exit(EXIT_ERROR);
-  } else {
-    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
-
-    // Create renderer with the default graphics context.
-    app.renderer = SDL_CreateRenderer(app.window, -1, rendererFlags);
-
-    if (!app.renderer) {
-      SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initialize renderer: %s.\n", SDL_GetError());
-      exit(EXIT_ERROR);
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Initialization Completed.");
-
-    //  Initialize SDL to accept both JPG and PNGs.
-    IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
-
-    //  Remove cursor.
-    SDL_ShowCursor(false);
   }
+
+  SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "linear");
+
+  // Create renderer with the default graphics context.
+  app.renderer = SDL_CreateRenderer(app.window, -1, rendererFlags);
+
+  if (!app.renderer) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Failed to initialize renderer: %s.\n", SDL_GetError());
+    exit(EXIT_ERROR);
+  }
+
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Initialization Completed.");
+
+  //  Initialize SDL to accept both JPG and PNGs.
+  IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+  //  Remove cursor.
+  SDL_ShowCursor(false);
+
+  initAudioContext();
+}
+
+/*
+ *
+ */
+void initAudioContext(void) {
+  if (Mix_OpenAudio(44100, AUDIO_S16SYS, 2, 1024) == -1) {
+    SDL_LogError(SDL_LOG_CATEGORY_ERROR, "Could not initialize SDL Mixer.\n");
+    exit(EXIT_ERROR);
+  }
+
+  Mix_AllocateChannels(MAX_SND_CHANNELS);
 }
 
 /*
