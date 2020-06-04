@@ -32,16 +32,17 @@ void blit(SDL_Texture* texture, int x, int y) {
 }
 
 /*
- *
+ * Renders a partition of a texture, specified by src, at
+ * coordinates (x, y).
  */
 void blitRect(SDL_Texture* texture, SDL_Rect* src, int x, int y) {
   SDL_Rect dest;
-
+  //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %d, %d.\n", x, y);
   dest.x = x;
   dest.y = y;
   dest.w = src->w;
   dest.h = src->h;
-
+  //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Blit debris.\n");
   SDL_RenderCopy(app.renderer, texture, src, &dest);
 }
 

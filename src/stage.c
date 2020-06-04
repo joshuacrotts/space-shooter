@@ -153,24 +153,30 @@ static void tick() {
  */
 static void updatePlayer() {
   if (player != NULL) {
-    player->dx = 0;
-    player->dy = 0;
-
     if (player->reload > 0) {
       player->reload--;
     }
 
     if (app.keyboard[SDL_SCANCODE_UP]) {
       player->dy = -PLAYER_SPEED;
+    } else if(!app.keyboard[SDL_SCANCODE_DOWN]){
+      player->dy *= PLAYER_DESCENT;
     }
+
     if (app.keyboard[SDL_SCANCODE_DOWN]) {
       player->dy = PLAYER_SPEED;
+    } else if (!app.keyboard[SDL_SCANCODE_UP]){
+      player->dy *= PLAYER_DESCENT;
     }
     if (app.keyboard[SDL_SCANCODE_LEFT]) {
       player->dx = -PLAYER_SPEED;
+    } else if(!app.keyboard[SDL_SCANCODE_RIGHT]) {
+      player->dx *= PLAYER_DESCENT;
     }
     if (app.keyboard[SDL_SCANCODE_RIGHT]) {
       player->dx = PLAYER_SPEED;
+    } else if(!app.keyboard[SDL_SCANCODE_LEFT]) {
+      player->dx *= PLAYER_DESCENT;
     }
     if (app.keyboard[SDL_SCANCODE_LCTRL] && player->reload == 0) {
       fireBullet();
@@ -367,10 +373,12 @@ static void updateDebris() {
   prev = &stage.debrisHead;
 
   for (d = stage.debrisHead.next; d != NULL; d = d->next) {
+    //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %d, %d.\n", d->x, d->y);
     d->x += d->dx;
     d->y += d->dy;
-
+    //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "updating de: %d, %d\n", d->x, d->y);
     d->dy += 0.5;
+    //d->dx += 0.2;
 
     if (--d->life <= 0) {
       if (d == stage.debrisTail) {
@@ -477,7 +485,9 @@ static void drawDebris() {
   Debris* d;
 
   for (d = stage.debrisHead.next; d != NULL; d = d->next) {
-    blitRect(d->texture, &d->rect, d->x, d->y);
+    //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %d, %d.\n", (int) d->x, (int) d->y);
+    blitRect(d->texture, &d->rect, (int) d->x, (int) d->y);
+    //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %f, %f.\n", &d->rect.x, &d->rect.y);
   }
 }
 
@@ -645,15 +655,16 @@ static void addExplosion(int x, int y, int num) {
         break;
       case 1:
         e->r = 0xff;
-        e->g = 0x80;
+        e->g = 0xa5;
         break;
       case 2:
         e->r = 0xff;
-        e->g = 0xff;
+        e->g = 0xae;
+        e->b = 0x42;
       default:
-        e->r = 0xff;
-        e->g = 0xff;
-        e->b = 0xff;
+        e->r = 0xea;
+        e->g = 0x1b;
+        e->b = 0x1b;
     }
 
     e->a = randomInt(0, FRAMES_PER_SECOND * 3);
@@ -679,6 +690,7 @@ static void addDebris(Entity* e) {
 
       d->x = e->x + e->w / 2;
       d->y = e->y + e->h / 2;
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %f, %f.\n", d->x, d->y);
       d->dx = randomFloat(0, 5) - randomFloat(0, 5);
       d->dy = randomFloat(-16, -5);
       d->life = FRAMES_PER_SECOND * 2;
@@ -688,6 +700,9 @@ static void addDebris(Entity* e) {
       d->rect.y = y;
       d->rect.w = w;
       d->rect.h = h;
+
+      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris blit at %d, %d, %d, %d\n", d->rect.x, d->rect.y, d->rect.w, d->rect.h);
+
     }
   }
 }
