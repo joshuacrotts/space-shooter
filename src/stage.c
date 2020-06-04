@@ -232,36 +232,34 @@ static void updateEnemies() {
  *
  */
 static void updateFighters() {
-	Entity* e;
+  Entity* e;
   Entity* prev;
 
-	prev = &stage.fighterHead;
+  prev = &stage.fighterHead;
 
-	for (e = stage.fighterHead.next; e != NULL; e = e->next){
-		e->x += e->dx;
-		e->y += e->dy;
+  for (e = stage.figherHead.next; e != NULL; e = e->next) {
+    e->x += e->dx;
+    e->y += e->dy;
 
-		if (e != player && e->x < -e->w) {
-			e->health = 0;
-		}
+    if (e != player && e->x < -e->w) {
+      e->health = 0;
+    }
 
-		if (e->health == 0) {
-			if (e == player) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Player has died.\n");
-				player = NULL;
-			}
+    if (e->health == 0) {
+      if (e == player) {
+        player = NULL;
+      }
 
-			if (e == stage.fighterTail) {
-				stage.fighterTail = prev;
-			}
+      if (e == stage.fighterTail) {
+        stage.figherTail = prev;
+      }
 
-			prev->next = e->next;
-			free(e);
-			e = prev;
-		}
-
-		prev = e;
-	}
+      prev->next = e->next;
+      free(e);
+      e = prev;
+    }
+    prev = e;
+  }
 }
 
 /*
