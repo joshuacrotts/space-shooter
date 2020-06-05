@@ -82,6 +82,8 @@ typedef struct Star {
 } Star;
 
 typedef struct Stage {
+  int score;
+
   Entity fighterHead, *fighterTail;
   Entity bulletHead, *bulletTail;
   Explosion explosionHead, *explosionTail;

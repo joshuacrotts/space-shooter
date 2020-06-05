@@ -11,6 +11,7 @@ int main(int argc, char *argv[]) {
 
   initSDL();
   initSounds();
+  initFonts();
 
   // Assigns the callback function to clean up the
   // SDL context when closing the program.

@@ -30,6 +30,7 @@ static void drawExplosions(void);
 static void drawExplosionParticles(void);
 static void drawFireParticles(void);
 static void drawDebris(void);
+static void drawHUD(void);
 
 //========= ETC PROTOTYPES ==========//
 static void spawnEnemies(void);
@@ -45,6 +46,7 @@ static void resetStage(void);
 static int enemySpawnTimer;
 static int stageResetTimer;
 static int backgroundX;
+static int highscore;
 
 static Star stars[MAX_STARS];
 static FireTrail fireTrail[MAX_FIRE_PARTICLES];
@@ -237,7 +239,7 @@ static void updateFighters() {
 
   prev = &stage.fighterHead;
 
-  for (e = stage.figherHead.next; e != NULL; e = e->next) {
+  for (e = stage.fighterHead.next; e != NULL; e = e->next) {
     e->x += e->dx;
     e->y += e->dy;
 
@@ -251,7 +253,7 @@ static void updateFighters() {
       }
 
       if (e == stage.fighterTail) {
-        stage.figherTail = prev;
+        stage.fighterTail = prev;
       }
 
       prev->next = e->next;
@@ -405,6 +407,7 @@ static void draw() {
   drawExplosions();
   drawExplosionParticles();
   drawBullets();
+  drawHUD();
 }
 
 /*
@@ -527,6 +530,19 @@ static void drawExplosionParticles() {
 /*
  *
  */
+static void drawHUD(void) {
+  drawText(10, 10, 0xff, 0xff, 0xff, "SCORE: %03d", stage.score);
+  //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "draw hud.\n");
+  if (stage.score > 0 && stage.score == highscore) {
+    drawText(960, 10, 0, 0xff, 0, "HIGH SCORE: %03d", highscore);
+  } else {
+    drawText(960, 10, 0xff, 0xff, 0xff, "HIGH SCORE: %03d", highscore);
+  }
+}
+
+/*
+ *
+ */
 static void spawnEnemies() {
   Entity* enemy;
 
@@ -569,6 +585,10 @@ static bool bulletHitFighter(Entity* b) {
         // We choose this channel so we can play multiple overlapping
         // sound effects.
         playSound(SND_ALIEN_DIE, CH_ANY);
+
+        stage.score++;
+
+        highscore = MAX(stage.score, highscore);
       }
 
       return true;

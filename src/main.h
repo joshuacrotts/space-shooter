@@ -9,3 +9,4 @@ extern void prepareScene(void);
 extern void presentScene(void);
 extern void processInput(void);
 extern void initStage(void);
+extern void initFonts(void);
