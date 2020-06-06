@@ -83,9 +83,11 @@ typedef struct Star {
 
 typedef struct Stage {
   int score;
+  int gameState;
 
   Entity fighterHead, *fighterTail;
   Entity bulletHead, *bulletTail;
+  Entity pointsHead, *pointsTail;
   Explosion explosionHead, *explosionTail;
   Debris debrisHead, *debrisTail;
   FireTrail fireHead, *fireTail;

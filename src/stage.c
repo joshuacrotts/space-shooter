@@ -19,6 +19,7 @@ static void updateBackground(void);
 static void updateExplosions(void);
 static void updateDebris(void);
 static void updateStarfield(void);
+static void updatePointPods(void);
 
 //========= DRAW/RENDER PROTOTYPES ==========/
 static void drawPlayer(void);
@@ -30,7 +31,9 @@ static void drawExplosions(void);
 static void drawExplosionParticles(void);
 static void drawFireParticles(void);
 static void drawDebris(void);
+static void drawPointPods(void);
 static void drawHUD(void);
+static void drawPausedMenu(void);
 
 //========= ETC PROTOTYPES ==========//
 static void spawnEnemies(void);
@@ -40,6 +43,7 @@ static void fireAlienBullet(Entity*);
 static void addExplosion(int, int, int);
 static void addExplosionParticle(int, int, int);
 static void addDebris(Entity*);
+static void addPointPod(int, int);
 static void clipPlayer(void);
 static void resetStage(void);
 
@@ -58,6 +62,7 @@ static SDL_Texture* alienBulletTexture;
 static SDL_Texture* playerTexture;
 static SDL_Texture* explosionTexture;
 static SDL_Texture* background;
+static SDL_Texture* pointsTexture;
 
 /*
  *
@@ -73,15 +78,18 @@ void initStage(void) {
   stage.debrisTail = &stage.debrisHead;
   stage.fireTail = &stage.fireHead;
   stage.explosionParticleTail = &stage.explosionParticleHead;
+  stage.pointsTail = &stage.pointsHead;
 
-  playerTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/player.png");
-  bulletTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/bullet.png");
-  enemyTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/enemy.png");
-  alienBulletTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/alienBullet.png");
-  explosionTexture = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/explosion.png");
-  background = loadTexture("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/gfx/background.png");
+  playerTexture = loadTexture("../gfx/player.png");
+  bulletTexture = loadTexture("../gfx/bullet.png");
+  enemyTexture = loadTexture("../gfx/enemy.png");
+  alienBulletTexture = loadTexture("../gfx/alienBullet.png");
+  explosionTexture = loadTexture("../gfx/explosion.png");
+  background = loadTexture("../gfx/background.png");
+  pointsTexture = loadTexture("../gfx/points.png");
 
   resetStage();
+  stage.gameState = RUNNING;
 }
 
 /*
@@ -132,18 +140,21 @@ static void initFireParticles() {
  *
  */
 static void tick() {
-  updateBackground();
-  updateStarfield();
-  updateFireParticles();
-  updateExplosionParticles();
-  updatePlayer();
-  updateEnemies();
-  updateFighters();
-  updateBullets();
-  spawnEnemies();
-  updateExplosions();
-  updateDebris();
-  clipPlayer();
+  if (stage.gameState == RUNNING) {
+    updatePlayer();
+    updateBackground();
+    updateStarfield();
+    updatePointPods();
+    updateFireParticles();
+    updateExplosionParticles();
+    updateEnemies();
+    updateFighters();
+    updateBullets();
+    spawnEnemies();
+    updateExplosions();
+    updateDebris();
+    clipPlayer();
+  }
 
   if (player == NULL && --stageResetTimer <= 0) {
     resetStage();
@@ -170,16 +181,19 @@ static void updatePlayer() {
     } else if (!app.keyboard[SDL_SCANCODE_UP]){
       player->dy *= PLAYER_DESCENT;
     }
+
     if (app.keyboard[SDL_SCANCODE_LEFT]) {
       player->dx = -PLAYER_SPEED;
     } else if(!app.keyboard[SDL_SCANCODE_RIGHT]) {
       player->dx *= PLAYER_DESCENT;
     }
+
     if (app.keyboard[SDL_SCANCODE_RIGHT]) {
       player->dx = PLAYER_SPEED;
     } else if(!app.keyboard[SDL_SCANCODE_LEFT]) {
       player->dx *= PLAYER_DESCENT;
     }
+
     if (app.keyboard[SDL_SCANCODE_LCTRL] && player->reload == 0) {
       fireBullet();
       playSound(SND_PLAYER_FIRE, CH_PLAYER);
@@ -398,9 +412,66 @@ static void updateDebris() {
 /*
  *
  */
+static void updatePointPods(void) {
+  Entity* e;
+  Entity* prev;
+
+  prev = &stage.pointsHead;
+
+  for (e = stage.pointsHead.next; e != NULL; e = e->next) {
+    if (e->x < 0) {
+      e->x = 0;
+      e->dx = -e->dx;
+    }
+
+    if (e->x + e->w > SCREEN_WIDTH) {
+      e->x = SCREEN_WIDTH - e->w;
+      e->dx = -e->dx;
+    }
+
+    if (e->y < 0) {
+      e->y = 0;
+      e->dy = -e->dy;
+    }
+
+    if (e->y + e->h > SCREEN_HEIGHT) {
+      e->y = SCREEN_HEIGHT - e->h;
+      e->dy = -e->dy;
+    }
+
+    e->x += e->dx;
+    e->y += e->dy;
+
+    if (player != NULL && collision(e->x, e->y, e->w, e->h, player->x, player->y, player->w, player->h)) {
+      e->health = 0;
+
+      stage.score++;
+
+      highscore = MAX(stage.score, highscore);
+
+      playSound(SND_POINTS, CH_POINTS);
+    }
+
+    if (--e->health <= 0) {
+      if (e == stage.pointsTail) {
+        stage.pointsTail = prev;
+      }
+
+      prev->next = e->next;
+      free(e);
+      e = prev;
+    }
+    prev = e;
+  }
+}
+
+/*
+ *
+ */
 static void draw() {
   drawBackground();
   drawStarfield();
+  drawPointPods();
   drawFireParticles();
   drawFighters();
   drawDebris();
@@ -408,6 +479,10 @@ static void draw() {
   drawExplosionParticles();
   drawBullets();
   drawHUD();
+
+  if (stage.gameState == PAUSED) {
+    drawPausedMenu();
+  }
 }
 
 /*
@@ -521,7 +596,7 @@ static void drawExplosionParticles() {
 
   for (exp = stage.explosionParticleHead.next; exp != NULL; exp = exp->next) {
     int c = exp->grayscaleColor;
-    SDL_SetRenderDrawColor(app.renderer, c, c, c, 255);
+    SDL_SetRenderDrawColor(app.renderer, c, c, c, 0xff);
     SDL_RenderFillRect(app.renderer, &exp->rect);
     //blitRect(d->texture, &d->rect, d->x, d->y);
   }
@@ -538,6 +613,59 @@ static void drawHUD(void) {
   } else {
     drawText(960, 10, 0xff, 0xff, 0xff, "HIGH SCORE: %03d", highscore);
   }
+}
+
+/*
+ *
+ */
+static void drawPointPods(void) {
+  Entity *e;
+
+  for (e = stage.pointsHead.next; e != NULL; e = e->next) {
+    blit(e->texture, e->x, e->y);
+  }
+}
+
+/*
+ *
+ */
+static void drawPausedMenu(void) {
+  SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_BLEND);
+  SDL_SetRenderDrawColor(app.renderer, 0, 0, 0, 0x7f);
+  SDL_Rect rect;
+
+  rect.x = 0;
+  rect.y = 0;
+  rect.w = SCREEN_WIDTH;
+  rect.h = SCREEN_HEIGHT;
+
+  SDL_RenderFillRect(app.renderer, &rect);
+  SDL_SetRenderDrawBlendMode(app.renderer, SDL_BLENDMODE_NONE);
+  drawText(SCREEN_WIDTH >> 1, SCREEN_HEIGHT >> 1, 0xff, 0xff, 0xff, "PAUSED");
+}
+
+/*
+ *
+ */
+static void addPointPod(int x, int y) {
+  Entity* e;
+
+  e = malloc(sizeof(Entity));
+  memset(e, 0, sizeof(Entity));
+  stage.pointsTail->next = e;
+  stage.pointsTail = e;
+
+  e->x = x;
+  e->y = y;
+  e->dx = randomFloat(-5, -1);
+  e->dy = randomFloat(-2, 2);
+  e->health = FRAMES_PER_SECOND * 10;
+  e->texture = pointsTexture;
+
+  SDL_QueryTexture(e->texture, NULL, NULL, &e->w, &e->h);
+
+  e->x -= e->w / 2;
+  e->y -= e->h / 2;
 }
 
 /*
@@ -582,13 +710,10 @@ static bool bulletHitFighter(Entity* b) {
       if (e == player) {
         playSound(SND_PLAYER_DIE, CH_PLAYER);
       } else {
+        addPointPod(e->x + e->w / 2, e->y + e->h / 2);
         // We choose this channel so we can play multiple overlapping
         // sound effects.
         playSound(SND_ALIEN_DIE, CH_ANY);
-
-        stage.score++;
-
-        highscore = MAX(stage.score, highscore);
       }
 
       return true;
@@ -720,7 +845,7 @@ static void addDebris(Entity* e) {
 
       d->x = e->x + e->w / 2;
       d->y = e->y + e->h / 2;
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %f, %f.\n", d->x, d->y);
+      //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris at %f, %f.\n", d->x, d->y);
       d->dx = randomFloat(0, 5) - randomFloat(0, 5);
       d->dy = randomFloat(-16, -5);
       d->life = FRAMES_PER_SECOND * 2;
@@ -730,9 +855,7 @@ static void addDebris(Entity* e) {
       d->rect.y = y;
       d->rect.w = w;
       d->rect.h = h;
-
-      SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris blit at %d, %d, %d, %d\n", d->rect.x, d->rect.y, d->rect.w, d->rect.h);
-
+      //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Added debris blit at %d, %d, %d, %d\n", d->rect.x, d->rect.y, d->rect.w, d->rect.h);
     }
   }
 }
@@ -809,6 +932,13 @@ static void resetStage(void) {
     free(e);
   }
 
+  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Cleared point textures.\n");
+  while (stage.pointsHead.next) {
+    e = stage.pointsHead.next;
+    stage.pointsHead.next = e->next;
+    free(e);
+  }
+
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Resetting pointers.\n");
   memset(&stage, 0, sizeof(Stage));
   stage.fighterTail = &stage.fighterHead;
@@ -816,6 +946,7 @@ static void resetStage(void) {
   stage.explosionTail = &stage.explosionHead;
   stage.debrisTail = &stage.debrisHead;
   stage.explosionParticleTail = &stage.explosionParticleHead;
+  stage.pointsTail = &stage.pointsHead;
 
   initPlayer();
   initStarfield();

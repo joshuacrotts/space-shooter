@@ -40,7 +40,7 @@ void playMusic(int loop) {
  *
  */
 void playSound(int id, int channel) {
-  SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Playing sound started.\n");
+  //SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Playing sound started.\n");
   Mix_PlayChannel(channel, sounds[id], 0);
 }
 
@@ -49,8 +49,9 @@ void playSound(int id, int channel) {
  */
 static void loadSounds(void) {
   SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Loading sound started.\n");
-  sounds[SND_PLAYER_FIRE] = Mix_LoadWAV("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/sfx/player_fire.ogg");
-  sounds[SND_ALIEN_FIRE] = Mix_LoadWAV("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/sfx/alien_fire.ogg");
-  sounds[SND_PLAYER_DIE] = Mix_LoadWAV("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/sfx/player_die.ogg");
-  sounds[SND_ALIEN_DIE] = Mix_LoadWAV("C:/Users/joshu/Desktop/Files/C/SDL_Game_01/sfx/alien_die.ogg");
+  sounds[SND_PLAYER_FIRE] = Mix_LoadWAV("../sfx/player_fire.ogg");
+  sounds[SND_ALIEN_FIRE] = Mix_LoadWAV("../sfx/alien_fire.ogg");
+  sounds[SND_PLAYER_DIE] = Mix_LoadWAV("../sfx/player_die.ogg");
+  sounds[SND_ALIEN_DIE] = Mix_LoadWAV("../sfx/alien_die.ogg");
+  sounds[SND_POINTS ] = Mix_LoadWAV("../sfx/point.ogg");
 }

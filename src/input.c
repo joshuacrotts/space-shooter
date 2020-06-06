@@ -1,5 +1,7 @@
 #include "input.h"
 
+static int previousFrameKey = -1;
+
 /*
  * Starts the SDL event loop.
  */
@@ -28,7 +30,15 @@ void processInput(void) {
  */
 void keyPressed(SDL_KeyboardEvent* event) {
   if (event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS) {
-      app.keyboard[event->keysym.scancode] = 1;
+    if (event->keysym.scancode == SDL_SCANCODE_ESCAPE && previousFrameKey != event->keysym.scancode) {
+      if(stage.gameState == PAUSED) {
+        stage.gameState = RUNNING;
+      } else {
+        stage.gameState = PAUSED;
+      }
+    }
+
+    app.keyboard[event->keysym.scancode] = 1;
   }
 }
 
@@ -37,6 +47,6 @@ void keyPressed(SDL_KeyboardEvent* event) {
  */
 void keyReleased(SDL_KeyboardEvent* event) {
   if (event->repeat == 0 && event->keysym.scancode < MAX_KEYBOARD_KEYS) {
-      app.keyboard[event->keysym.scancode] = 0;
+    app.keyboard[event->keysym.scancode] = 0;
   }
 }

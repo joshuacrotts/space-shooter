@@ -26,9 +26,15 @@
 #define MAX_LINE_LENGTH         1024
 
 enum {
+  RUNNING,
+  PAUSED
+};
+
+enum {
   CH_ANY = -1,
   CH_PLAYER,
-  CH_ALIEN_FIRE
+  CH_ALIEN_FIRE,
+  CH_POINTS
 };
 
 enum {
@@ -36,5 +42,6 @@ enum {
   SND_ALIEN_FIRE,
   SND_PLAYER_DIE,
   SND_ALIEN_DIE,
+  SND_POINTS,
   SND_MAX
 };
