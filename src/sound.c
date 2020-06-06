@@ -54,4 +54,6 @@ static void loadSounds(void) {
   sounds[SND_PLAYER_DIE] = Mix_LoadWAV("../sfx/player_die.ogg");
   sounds[SND_ALIEN_DIE] = Mix_LoadWAV("../sfx/alien_die.ogg");
   sounds[SND_POINTS ] = Mix_LoadWAV("../sfx/point.ogg");
+  loadMusic("../music/Mercury.ogg");
+  playMusic(true);
 }
