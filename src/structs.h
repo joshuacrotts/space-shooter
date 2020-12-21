@@ -1,3 +1,6 @@
+#ifndef STRUCTS_H
+#define STRUCTS_H
+
 #include "SDL2/SDL.h"
 #define MAX_KEYBOARD_KEYS   350
 
@@ -81,6 +84,15 @@ typedef struct Star {
   int speed;
 } Star;
 
+typedef struct Highscore {
+  int score;
+  int recent;
+} Highscore;
+
+typedef struct Leaderboard {
+  Highscore *highscore;
+} Leaderboard;
+
 typedef struct Stage {
   int score;
   int gameState;
@@ -93,3 +105,5 @@ typedef struct Stage {
   FireTrail fireHead, *fireTail;
   ExplosionParticle explosionParticleHead, *explosionParticleTail;
 } Stage;
+
+#endif // STRUCTS_H
