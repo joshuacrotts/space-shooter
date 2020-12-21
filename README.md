@@ -1,7 +1,7 @@
 <h1 align="center">Space Shooter</h1>
 
 <p align="center">
-  <img width="250" height="407" src="docs/sdl_spaceshooter.gif">
+  <img width="275" height="450" src="docs/sdl_spaceshooter.gif">
 </p>
 
 [![CodeFactor](https://www.codefactor.io/repository/github/joshuacrotts/Space-Shooter/badge)](https://www.codefactor.io/repository/github/joshuacrotts/Space-Shooter) ![GitHub contributors](https://img.shields.io/github/contributors/JoshuaCrotts/Space-Shooter ![GitHub commit activity](https://img.shields.io/github/commit-activity/m/JoshuaCrotts/Space-Shooter) ![GitHub repo size](https://img.shields.io/github/repo-size/JoshuaCrotts/Space-Shooter)  ![](https://tokei.rs/b1/github/JoshuaCrotts/Space-Shooter) ![](https://tokei.rs/b1/github/JoshuaCrotts/Space-Shooter?category=files) [![GitHub issues open](https://img.shields.io/github/issues/JoshuaCrotts/Space-Shooter)]() 
