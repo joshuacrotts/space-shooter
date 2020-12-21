@@ -21,7 +21,6 @@ typedef struct App{
 
   Delegate delegate;
   int keyboard[MAX_KEYBOARD_KEYS];
-
 } App;
 
 typedef struct Entity {
